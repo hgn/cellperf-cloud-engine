@@ -10,16 +10,19 @@ from google.appengine.ext import ndb
 
 class DataCheckException(Exception): pass
 
-class DBEntry(db.Model):
-    name = db.StringProperty(required=True)
-    hire_date = db.DateProperty()
-    new_hire_training_completed = db.BooleanProperty(indexed=False)
+class DBEntry(ndb.Model):
+    name = ndb.StringProperty(required=True)
+    hire_date = ndb.DateProperty()
+    new_hire_training_completed = ndb.BooleanProperty(indexed=False)
+
 
 class DBEntryFoo:
-    e = DBEntry()
-    e.name = "Foo"
-    e.hire_date = datetime.datetime.now().date()
-    return e
+
+    def generate(self, name):
+        e = DBEntry()
+        e.name = name
+        e.hire_date = datetime.datetime.now().date()
+        return e
 
 
 class MainPage(webapp2.RequestHandler):
@@ -44,13 +47,14 @@ class MainPage(webapp2.RequestHandler):
         try:
             data = self.marshall_json(req.body)
             self.check_data(data)
-        except Error as err:
+        except ValueError as err:
             self.handle_client_error(err)
+            return
 
+        logging.error(data)
 
         obj = {
-                'success': 'some var', 
-                'payload': 'some var',
+                'success': 'data stored correctly', 
         } 
 
         self.response.headers['Content-Type'] = 'application/json'
