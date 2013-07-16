@@ -1,12 +1,70 @@
 import webapp2
+import json
+import logging
+import os
+import datetime
+
+import wsgiref.handlers
+from google.appengine.ext import ndb
+
+
+class DataCheckException(Exception): pass
+
+class DBEntry(db.Model):
+    name = db.StringProperty(required=True)
+    hire_date = db.DateProperty()
+    new_hire_training_completed = db.BooleanProperty(indexed=False)
+
+class DBEntryFoo:
+    e = DBEntry()
+    e.name = "Foo"
+    e.hire_date = datetime.datetime.now().date()
+    return e
+
 
 class MainPage(webapp2.RequestHandler):
 
+
+    def handle_client_error(self, error):
+        logging.error(error)
+        self.error(500)
+
+
+
+    def marshall_json(self, data):
+        return json.loads(data)
+
+
+    def check_data(self, data):
+        return True
+        raise DataCheckException("array must contain excatly 2 members")
+
+
+    def process_request(self, req):
+        try:
+            data = self.marshall_json(req.body)
+            self.check_data(data)
+        except Error as err:
+            self.handle_client_error(err)
+
+
+        obj = {
+                'success': 'some var', 
+                'payload': 'some var',
+        } 
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(obj))
+
+
     def get(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.write('Hello, World!')
+        req = self.request
+        self.process_request(req)
 
 
-application = webapp2.WSGIApplication([
-    ('/', MainPage),
-], debug=True)
+    def post(self):
+        req = self.request
+        self.process_request(req)
+
+
+app = webapp2.WSGIApplication([ ('/', MainPage), ], debug=True)

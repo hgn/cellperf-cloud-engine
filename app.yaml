@@ -6,4 +6,4 @@ threadsafe: true
 
 handlers:
 - url: /.*
-  script: cellperf-cloud-engine.application
+  script: cellperf-cloud-engine.app
